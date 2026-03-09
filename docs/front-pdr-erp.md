@@ -35,6 +35,7 @@ App: `front-pdr-erp`
   - chave PIX
   - taxa de entrega
   - taxa de cartao
+  - credenciais do motoboy (criar/editar email e senha)
   - horarios de funcionamento.
 - Produtos com upload de imagem local (alem de URL).
 - Modulo de entregas separado:

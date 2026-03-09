@@ -1,35 +1,49 @@
--- DropForeignKey
-ALTER TABLE "RecipeItem" DROP CONSTRAINT "RecipeItem_inventoryItemId_fkey";
+-- DropForeignKey (protegido para bancos com drift)
+ALTER TABLE "RecipeItem" DROP CONSTRAINT IF EXISTS "RecipeItem_inventoryItemId_fkey";
 
 -- AlterTable
-ALTER TABLE "Order" ADD COLUMN     "cmvTotal" DOUBLE PRECISION,
-ADD COLUMN     "grossMarginPercent" DOUBLE PRECISION,
-ADD COLUMN     "grossMarginValue" DOUBLE PRECISION;
+ALTER TABLE "Order"
+  ADD COLUMN IF NOT EXISTS "cmvTotal" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "grossMarginPercent" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "grossMarginValue" DOUBLE PRECISION;
 
--- AlterTable
-ALTER TABLE "OrderItem" ADD COLUMN     "cmvTotal" DOUBLE PRECISION,
-ADD COLUMN     "cmvUnit" DOUBLE PRECISION,
-ADD COLUMN     "marginPercent" DOUBLE PRECISION,
-ADD COLUMN     "marginValue" DOUBLE PRECISION;
+ALTER TABLE "OrderItem"
+  ADD COLUMN IF NOT EXISTS "cmvTotal" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "cmvUnit" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "marginPercent" DOUBLE PRECISION,
+  ADD COLUMN IF NOT EXISTS "marginValue" DOUBLE PRECISION;
 
--- AlterTable
-ALTER TABLE "ProductPizzaFlavor" ADD COLUMN     "description" TEXT;
+ALTER TABLE "ProductPizzaFlavor" ADD COLUMN IF NOT EXISTS "description" TEXT;
 
--- AlterTable
-ALTER TABLE "RecipeItem" ADD COLUMN     "ingredientProductId" TEXT,
-ALTER COLUMN "inventoryItemId" DROP NOT NULL;
+ALTER TABLE "RecipeItem" ADD COLUMN IF NOT EXISTS "ingredientProductId" TEXT;
+ALTER TABLE "RecipeItem" ALTER COLUMN "inventoryItemId" DROP NOT NULL;
 
--- CreateIndex
-CREATE INDEX "RecipeItem_productId_idx" ON "RecipeItem"("productId");
+CREATE INDEX IF NOT EXISTS "RecipeItem_productId_idx" ON "RecipeItem"("productId");
 
--- CreateIndex
-CREATE INDEX "RecipeItem_inventoryItemId_idx" ON "RecipeItem"("inventoryItemId");
+CREATE INDEX IF NOT EXISTS "RecipeItem_inventoryItemId_idx" ON "RecipeItem"("inventoryItemId");
 
--- CreateIndex
-CREATE INDEX "RecipeItem_ingredientProductId_idx" ON "RecipeItem"("ingredientProductId");
+CREATE INDEX IF NOT EXISTS "RecipeItem_ingredientProductId_idx" ON "RecipeItem"("ingredientProductId");
 
--- AddForeignKey
-ALTER TABLE "RecipeItem" ADD CONSTRAINT "RecipeItem_inventoryItemId_fkey" FOREIGN KEY ("inventoryItemId") REFERENCES "InventoryItem"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'RecipeItem_inventoryItemId_fkey'
+  ) THEN
+    ALTER TABLE "RecipeItem"
+      ADD CONSTRAINT "RecipeItem_inventoryItemId_fkey"
+      FOREIGN KEY ("inventoryItemId") REFERENCES "InventoryItem"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;
 
--- AddForeignKey
-ALTER TABLE "RecipeItem" ADD CONSTRAINT "RecipeItem_ingredientProductId_fkey" FOREIGN KEY ("ingredientProductId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'RecipeItem_ingredientProductId_fkey'
+  ) THEN
+    ALTER TABLE "RecipeItem"
+      ADD CONSTRAINT "RecipeItem_ingredientProductId_fkey"
+      FOREIGN KEY ("ingredientProductId") REFERENCES "Product"("id")
+      ON DELETE SET NULL ON UPDATE CASCADE;
+  END IF;
+END $$;

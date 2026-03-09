@@ -3,7 +3,7 @@ import PageState from "../components/PageState.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { Input } from "../components/ui/Input.jsx";
 import { Button } from "../components/ui/Button.jsx";
-import { getTenantMe, updateTenantMe } from "../lib/api";
+import { createDeliveryAgent, getTenantMe, listDeliveryAgents, updateDeliveryAgent, updateTenantMe } from "../lib/api";
 import { useToast } from "../components/ui/Toast.jsx";
 
 const DAYS = [
@@ -41,13 +41,23 @@ export default function TenantSettings() {
   const [pixKey, setPixKey] = useState("");
   const [deliveryFee, setDeliveryFee] = useState("0");
   const [cardFeePercent, setCardFeePercent] = useState("0");
+  const [deliveryAgents, setDeliveryAgents] = useState([]);
+  const [deliveryAgentId, setDeliveryAgentId] = useState("");
+  const [deliveryAgentName, setDeliveryAgentName] = useState("");
+  const [deliveryAgentEmail, setDeliveryAgentEmail] = useState("");
+  const [deliveryAgentPhone, setDeliveryAgentPhone] = useState("");
+  const [deliveryAgentPassword, setDeliveryAgentPassword] = useState("");
 
   async function refresh() {
     setErr("");
     setLoading(true);
     try {
-      const data = await getTenantMe();
+      const [data, agents] = await Promise.all([
+        getTenantMe(),
+        listDeliveryAgents().catch(() => [])
+      ]);
       setTenant(data);
+      setDeliveryAgents(Array.isArray(agents) ? agents : []);
       setLogoUrl(data.logoUrl || "");
       setPixKey(data?.checkoutSettings?.pixKey || "");
       setDeliveryFee(String(data?.checkoutSettings?.deliveryFee ?? 0));
@@ -68,6 +78,12 @@ export default function TenantSettings() {
       } else {
         setHours(defaultHours());
       }
+      const firstAgent = (Array.isArray(agents) ? agents : [])[0] || null;
+      setDeliveryAgentId(firstAgent?.id || "");
+      setDeliveryAgentName(firstAgent?.name || "");
+      setDeliveryAgentEmail(firstAgent?.email || "");
+      setDeliveryAgentPhone(firstAgent?.phone || "");
+      setDeliveryAgentPassword("");
     } catch (e) {
       setErr(e.message);
     } finally {
@@ -80,6 +96,15 @@ export default function TenantSettings() {
   }, []);
 
   const hoursMap = useMemo(() => Object.fromEntries(hours.map((h) => [h.day, h])), [hours]);
+
+  useEffect(() => {
+    const selected = deliveryAgents.find((a) => a.id === deliveryAgentId);
+    if (!selected) return;
+    setDeliveryAgentName(selected.name || "");
+    setDeliveryAgentEmail(selected.email || "");
+    setDeliveryAgentPhone(selected.phone || "");
+    setDeliveryAgentPassword("");
+  }, [deliveryAgentId, deliveryAgents]);
 
   async function saveHours() {
     try {
@@ -106,6 +131,44 @@ export default function TenantSettings() {
         }
       });
       toast.success("Dados atualizados");
+      await refresh();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function saveDeliveryAgent() {
+    try {
+      setSaving(true);
+      if (!deliveryAgentName || !deliveryAgentEmail) {
+        toast.error("Nome e email do motoboy sao obrigatorios");
+        return;
+      }
+
+      if (deliveryAgentId) {
+        await updateDeliveryAgent(deliveryAgentId, {
+          name: deliveryAgentName,
+          email: deliveryAgentEmail,
+          phone: deliveryAgentPhone,
+          password: deliveryAgentPassword || undefined
+        });
+        toast.success("Credenciais do motoboy atualizadas");
+      } else {
+        if (!deliveryAgentPassword) {
+          toast.error("Informe senha para criar o motoboy");
+          return;
+        }
+        await createDeliveryAgent({
+          name: deliveryAgentName,
+          email: deliveryAgentEmail,
+          phone: deliveryAgentPhone,
+          password: deliveryAgentPassword
+        });
+        toast.success("Motoboy criado");
+      }
+
       await refresh();
     } catch (e) {
       toast.error(e.message);
@@ -171,8 +234,33 @@ export default function TenantSettings() {
               <div className="muted">Percentual aplicado em pagamentos credito/debito.</div>
             </div>
             <Input type="number" step="0.01" value={cardFeePercent} onChange={(e) => setCardFeePercent(e.target.value)} placeholder="ex.: 3.99" />
+
+            <div className="field-help" style={{ marginTop: 6 }}>
+              <div className="section-title">Credenciais do motoboy</div>
+              <div className="muted">Este login acessa somente o painel de entregas.</div>
+            </div>
+            <select
+              className="select"
+              value={deliveryAgentId}
+              onChange={(e) => setDeliveryAgentId(e.target.value)}
+            >
+              <option value="">Novo motoboy</option>
+              {deliveryAgents.map((a) => (
+                <option key={a.id} value={a.id}>{a.name} ({a.email})</option>
+              ))}
+            </select>
+            <Input value={deliveryAgentName} onChange={(e) => setDeliveryAgentName(e.target.value)} placeholder="Nome do motoboy" />
+            <Input value={deliveryAgentEmail} onChange={(e) => setDeliveryAgentEmail(e.target.value)} placeholder="Email do motoboy" />
+            <Input value={deliveryAgentPhone} onChange={(e) => setDeliveryAgentPhone(e.target.value)} placeholder="Telefone do motoboy" />
+            <Input
+              type="password"
+              value={deliveryAgentPassword}
+              onChange={(e) => setDeliveryAgentPassword(e.target.value)}
+              placeholder={deliveryAgentId ? "Nova senha (opcional)" : "Senha (obrigatoria)"}
+            />
             <div className="inline">
               <Button variant="primary" onClick={saveDados} disabled={saving}>{saving ? "Salvando..." : "Salvar dados"}</Button>
+              <Button onClick={saveDeliveryAgent} disabled={saving}>{saving ? "Salvando..." : "Salvar motoboy"}</Button>
               <Button variant="ghost" onClick={refresh}>Recarregar</Button>
             </div>
           </div>

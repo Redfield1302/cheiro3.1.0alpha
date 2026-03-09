@@ -19,15 +19,26 @@ function deliveryPayload(deliveryPerson) {
 }
 
 router.post("/auth/login", async (req, res) => {
-  const { email, password } = req.body || {};
+  const { email, password, tenantSlug } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "email e password sao obrigatorios" });
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const deliveryPerson = await prisma.deliveryPerson.findFirst({
-    where: { email: normalizedEmail },
-    include: { tenant: true }
+  const where = {
+    email: normalizedEmail,
+    ...(tenantSlug ? { tenant: { slug: String(tenantSlug).trim().toLowerCase() } } : {})
+  };
+
+  const matches = await prisma.deliveryPerson.findMany({
+    where,
+    include: { tenant: true },
+    take: 5
   });
-  if (!deliveryPerson) return res.status(401).json({ error: "Credenciais invalidas" });
+  if (!matches.length) return res.status(401).json({ error: "Credenciais invalidas" });
+  if (!tenantSlug && matches.length > 1) {
+    return res.status(409).json({ error: "Informe o slug do tenant para este entregador" });
+  }
+
+  const deliveryPerson = matches[0];
 
   const ok = await bcrypt.compare(password, deliveryPerson.password);
   if (!ok) return res.status(401).json({ error: "Credenciais invalidas" });
@@ -209,6 +220,69 @@ router.post("/agents", auth, async (req, res) => {
   } catch (e) {
     console.error("delivery_agent_create_error", e);
     return res.status(500).json({ error: "Falha ao criar entregador" });
+  }
+});
+
+router.get("/agents", auth, async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const role = String(req.user.role || "");
+    if (!["ADMIN", "MANAGER"].includes(role)) return res.status(403).json({ error: "Sem permissao" });
+
+    const rows = await prisma.deliveryPerson.findMany({
+      where: { tenantId },
+      orderBy: [{ createdAt: "asc" }],
+      select: { id: true, name: true, email: true, phone: true, createdAt: true, updatedAt: true }
+    });
+
+    return res.json(rows);
+  } catch (e) {
+    console.error("delivery_agents_list_error", e);
+    return res.status(500).json({ error: "Falha ao listar entregadores" });
+  }
+});
+
+router.patch("/agents/:id", auth, async (req, res) => {
+  try {
+    const tenantId = req.user.tenantId;
+    const role = String(req.user.role || "");
+    if (!["ADMIN", "MANAGER"].includes(role)) return res.status(403).json({ error: "Sem permissao" });
+
+    const current = await prisma.deliveryPerson.findFirst({
+      where: { id: req.params.id, tenantId }
+    });
+    if (!current) return res.status(404).json({ error: "Entregador nao encontrado" });
+
+    const { name, email, phone, password } = req.body || {};
+    const nextEmail = email ? String(email).trim().toLowerCase() : current.email;
+    if (email && nextEmail !== current.email) {
+      const exists = await prisma.deliveryPerson.findFirst({
+        where: { tenantId, email: nextEmail, NOT: { id: current.id } }
+      });
+      if (exists) return res.status(409).json({ error: "Ja existe entregador com este email" });
+    }
+
+    const data = {
+      name: name ? String(name).trim() : current.name,
+      email: nextEmail,
+      phone: phone != null ? String(phone).trim() : current.phone
+    };
+
+    if (password != null && String(password).trim() !== "") {
+      if (String(password).length < 6) return res.status(400).json({ error: "password deve ter pelo menos 6 caracteres" });
+      data.password = await bcrypt.hash(String(password), 10);
+    }
+
+    const updated = await prisma.deliveryPerson.update({
+      where: { id: current.id },
+      data,
+      select: { id: true, name: true, email: true, phone: true, createdAt: true, updatedAt: true }
+    });
+
+    return res.json(updated);
+  } catch (e) {
+    console.error("delivery_agent_update_error", e);
+    return res.status(500).json({ error: "Falha ao atualizar entregador" });
   }
 });
 

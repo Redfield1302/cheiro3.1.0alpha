@@ -80,6 +80,7 @@ export default function DeliveryBoard() {
             <div>
               <div className="section-title">Modulo Entregas</div>
               <div><b>{session.deliveryPerson?.name}</b> - {session.tenant?.name}</div>
+              <div className="muted">tenant: {session.tenant?.slug || "-"}</div>
             </div>
             <div className="inline">
               <Button onClick={() => refresh()}>Atualizar</Button>

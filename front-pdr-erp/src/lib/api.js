@@ -101,10 +101,10 @@ async function reqDelivery(path, tokenValue, options = {}) {
   return data;
 }
 
-export const deliveryLogin = (email, password) =>
+export const deliveryLogin = (email, password, tenantSlug = "") =>
   reqDelivery("/api/delivery/auth/login", null, {
     method: "POST",
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email, password, tenantSlug })
   });
 
 export const listDeliveryOrders = (tokenValue) =>
@@ -118,3 +118,9 @@ export const updateDeliveryOrderStatus = (tokenValue, orderId, toStatus) =>
     method: "PATCH",
     body: JSON.stringify({ toStatus })
   });
+
+export const listDeliveryAgents = () => req("/api/delivery/agents");
+export const createDeliveryAgent = (body) =>
+  req("/api/delivery/agents", { method: "POST", body: JSON.stringify(body) });
+export const updateDeliveryAgent = (id, body) =>
+  req(`/api/delivery/agents/${id}`, { method: "PATCH", body: JSON.stringify(body) });

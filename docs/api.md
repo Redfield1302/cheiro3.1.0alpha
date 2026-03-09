@@ -74,6 +74,7 @@ Base URL (dev): `http://localhost:3000`
 
 - `POST /api/delivery/auth/login`
   - login exclusivo de entregador
+  - suporta `tenantSlug` para resolver entregadores com mesmo email em tenants diferentes
 - `GET /api/delivery/orders`
   - lista apenas pedidos `READY` (disponiveis) e `DISPATCHED` do proprio entregador
 - `PATCH /api/delivery/orders/:id/claim`
@@ -82,6 +83,10 @@ Base URL (dev): `http://localhost:3000`
   - entregue/cancelado pelo entregador
 - `POST /api/delivery/agents`
   - cria entregador para o tenant (ADMIN/MANAGER)
+- `GET /api/delivery/agents`
+  - lista motoboys do tenant
+- `PATCH /api/delivery/agents/:id`
+  - atualiza credenciais e dados do motoboy
 
 ## Pedidos e dashboard
 

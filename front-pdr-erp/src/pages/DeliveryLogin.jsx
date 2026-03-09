@@ -8,6 +8,7 @@ import { setDeliverySession } from "../lib/deliverySession";
 export default function DeliveryLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [tenantSlug, setTenantSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -16,7 +17,7 @@ export default function DeliveryLogin() {
     setError("");
     setLoading(true);
     try {
-      const session = await deliveryLogin(email, password);
+      const session = await deliveryLogin(email, password, tenantSlug);
       setDeliverySession(session);
       window.location.href = "/delivery/board";
     } catch (err) {
@@ -33,6 +34,7 @@ export default function DeliveryLogin() {
         <div className="muted">Acesso apenas ao modulo de entregas.</div>
         {error ? <div className="state error" style={{ marginTop: 12 }}>{error}</div> : null}
         <form className="grid" style={{ marginTop: 12 }} onSubmit={onSubmit}>
+          <Input value={tenantSlug} onChange={(e) => setTenantSlug(e.target.value)} placeholder="slug do tenant (ex: minhapizzaria)" />
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" required />
           <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="senha" required />
           <Button variant="primary" disabled={loading}>{loading ? "Entrando..." : "Entrar"}</Button>
