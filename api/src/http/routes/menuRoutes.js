@@ -21,12 +21,17 @@ router.get("/:slug", async (req, res) => {
     if (!tenant) return res.status(404).json({ error: "Tenant nao encontrado" });
     const rules = tenant.rulesJson || {};
     const checkout = rules.checkout || {};
+    const branding = rules.branding || {};
     return res.json({
       tenant: {
         id: tenant.id,
         name: tenant.name,
         slug: tenant.slug,
         logoUrl: tenant.logoUrl,
+        branding: {
+          heroImageUrl: String(branding.heroImageUrl || ""),
+          restaurantIconUrl: String(branding.restaurantIconUrl || "")
+        },
         rulesJson: rules,
         checkoutSettings: {
           pixKey: String(checkout.pixKey || ""),

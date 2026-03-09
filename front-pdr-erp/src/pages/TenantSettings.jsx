@@ -16,8 +16,22 @@ const DAYS = [
   { key: "sun", label: "Domingo" }
 ];
 
+const HOME_PAYMENT_METHODS = [
+  { key: "PIX", label: "Pix" },
+  { key: "DEBIT", label: "Cartao debito" },
+  { key: "CREDIT", label: "Cartao credito" },
+  { key: "CASH", label: "Dinheiro" }
+];
+
 function defaultHours() {
   return DAYS.map((d) => ({ day: d.key, open: "18:00", close: "23:00", closed: d.key === "sun" }));
+}
+
+function normalizeTimeValue(raw, fallback = "18:00") {
+  const value = String(raw || "").trim();
+  const match = value.match(/^(\d{2}):(\d{2})/);
+  if (!match) return fallback;
+  return `${match[1]}:${match[2]}`;
 }
 
 function readFileAsDataUrl(file, onDone) {
@@ -30,6 +44,8 @@ function readFileAsDataUrl(file, onDone) {
 export default function TenantSettings() {
   const toast = useToast();
   const logoFileRef = useRef(null);
+  const heroFileRef = useRef(null);
+  const iconFileRef = useRef(null);
 
   const [tenant, setTenant] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -37,10 +53,15 @@ export default function TenantSettings() {
   const [err, setErr] = useState("");
   const [tab, setTab] = useState("dados");
   const [logoUrl, setLogoUrl] = useState("");
+  const [heroImageUrl, setHeroImageUrl] = useState("");
+  const [restaurantIconUrl, setRestaurantIconUrl] = useState("");
   const [hours, setHours] = useState(defaultHours());
   const [pixKey, setPixKey] = useState("");
   const [deliveryFee, setDeliveryFee] = useState("0");
   const [cardFeePercent, setCardFeePercent] = useState("0");
+  const [deliveryEta, setDeliveryEta] = useState("35/40 min");
+  const [minimumOrder, setMinimumOrder] = useState("25");
+  const [homePaymentMethods, setHomePaymentMethods] = useState(["PIX", "DEBIT", "CREDIT"]);
   const [deliveryAgents, setDeliveryAgents] = useState([]);
   const [deliveryAgentId, setDeliveryAgentId] = useState("");
   const [deliveryAgentName, setDeliveryAgentName] = useState("");
@@ -59,9 +80,18 @@ export default function TenantSettings() {
       setTenant(data);
       setDeliveryAgents(Array.isArray(agents) ? agents : []);
       setLogoUrl(data.logoUrl || "");
+      setHeroImageUrl(data?.branding?.heroImageUrl || "");
+      setRestaurantIconUrl(data?.branding?.restaurantIconUrl || "");
       setPixKey(data?.checkoutSettings?.pixKey || "");
       setDeliveryFee(String(data?.checkoutSettings?.deliveryFee ?? 0));
       setCardFeePercent(String(data?.checkoutSettings?.cardFeePercent ?? 0));
+      setDeliveryEta(String(data?.homeSettings?.deliveryEta || "35/40 min"));
+      setMinimumOrder(String(data?.homeSettings?.minimumOrder ?? 25));
+      setHomePaymentMethods(
+        Array.isArray(data?.homeSettings?.paymentMethods) && data.homeSettings.paymentMethods.length
+          ? data.homeSettings.paymentMethods
+          : ["PIX", "DEBIT", "CREDIT"]
+      );
       const existing = data?.rulesJson?.openingHours;
       if (Array.isArray(existing) && existing.length > 0) {
         setHours(
@@ -69,8 +99,8 @@ export default function TenantSettings() {
             const row = existing.find((x) => x.day === d.key) || {};
             return {
               day: d.key,
-              open: row.open || "18:00",
-              close: row.close || "23:00",
+              open: normalizeTimeValue(row.open, "18:00"),
+              close: normalizeTimeValue(row.close, "23:00"),
               closed: Boolean(row.closed)
             };
           })
@@ -109,7 +139,14 @@ export default function TenantSettings() {
   async function saveHours() {
     try {
       setSaving(true);
-      await updateTenantMe({ openingHours: hours });
+      await updateTenantMe({
+        openingHours: hours.map((h) => ({
+          day: h.day,
+          open: normalizeTimeValue(h.open, "18:00"),
+          close: normalizeTimeValue(h.close, "23:00"),
+          closed: Boolean(h.closed)
+        }))
+      });
       toast.success("Horarios atualizados");
       await refresh();
     } catch (e) {
@@ -124,6 +161,15 @@ export default function TenantSettings() {
       setSaving(true);
       await updateTenantMe({
         logoUrl,
+        branding: {
+          heroImageUrl,
+          restaurantIconUrl
+        },
+        homeSettings: {
+          deliveryEta,
+          minimumOrder: Number(minimumOrder || 0),
+          paymentMethods: homePaymentMethods
+        },
         checkoutSettings: {
           pixKey,
           deliveryFee: Number(deliveryFee || 0),
@@ -218,6 +264,42 @@ export default function TenantSettings() {
             {logoUrl ? <img src={logoUrl} alt="Logo preview" style={{ width: 92, height: 92, borderRadius: 10, objectFit: "cover" }} /> : null}
 
             <div className="field-help">
+              <div className="section-title">Imagem de capa (cardapio digital)</div>
+              <div className="muted">Usada no topo da home do cardapio. Formato recomendado horizontal.</div>
+            </div>
+            <Input value={heroImageUrl} onChange={(e) => setHeroImageUrl(e.target.value)} placeholder="url da capa" />
+            <input
+              ref={heroFileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => readFileAsDataUrl(e.target.files?.[0], setHeroImageUrl)}
+            />
+            <div className="inline">
+              <Button onClick={() => heroFileRef.current?.click()}>Selecionar capa do dispositivo</Button>
+              <Button variant="ghost" onClick={() => setHeroImageUrl("")}>Limpar capa</Button>
+            </div>
+            {heroImageUrl ? <img src={heroImageUrl} alt="Capa preview" style={{ width: "100%", maxHeight: 140, borderRadius: 10, objectFit: "cover" }} /> : null}
+
+            <div className="field-help">
+              <div className="section-title">Icone do restaurante (cardapio digital)</div>
+              <div className="muted">Usado como avatar pequeno em listas e cabecalho do menu.</div>
+            </div>
+            <Input value={restaurantIconUrl} onChange={(e) => setRestaurantIconUrl(e.target.value)} placeholder="url do icone" />
+            <input
+              ref={iconFileRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => readFileAsDataUrl(e.target.files?.[0], setRestaurantIconUrl)}
+            />
+            <div className="inline">
+              <Button onClick={() => iconFileRef.current?.click()}>Selecionar icone do dispositivo</Button>
+              <Button variant="ghost" onClick={() => setRestaurantIconUrl("")}>Limpar icone</Button>
+            </div>
+            {restaurantIconUrl ? <img src={restaurantIconUrl} alt="Icone preview" style={{ width: 72, height: 72, borderRadius: 14, objectFit: "cover" }} /> : null}
+
+            <div className="field-help">
               <div className="section-title">Chave Pix</div>
               <div className="muted">Chave exibida no checkout quando o cliente seleciona PIX.</div>
             </div>
@@ -234,6 +316,40 @@ export default function TenantSettings() {
               <div className="muted">Percentual aplicado em pagamentos credito/debito.</div>
             </div>
             <Input type="number" step="0.01" value={cardFeePercent} onChange={(e) => setCardFeePercent(e.target.value)} placeholder="ex.: 3.99" />
+
+            <div className="field-help">
+              <div className="section-title">Tempo de entrega (cardapio)</div>
+              <div className="muted">Exibido na home do cardapio digital.</div>
+            </div>
+            <Input value={deliveryEta} onChange={(e) => setDeliveryEta(e.target.value)} placeholder="ex.: 35/40 min" />
+
+            <div className="field-help">
+              <div className="section-title">Pedido minimo (cardapio)</div>
+              <div className="muted">Valor minimo mostrado na home do cardapio digital.</div>
+            </div>
+            <Input type="number" step="0.01" value={minimumOrder} onChange={(e) => setMinimumOrder(e.target.value)} placeholder="ex.: 25.00" />
+
+            <div className="field-help">
+              <div className="section-title">Formas de pagamento (cardapio)</div>
+              <div className="muted">Selecione as opcoes exibidas na home do cardapio.</div>
+            </div>
+            <div className="grid" style={{ gap: 8 }}>
+              {HOME_PAYMENT_METHODS.map((m) => (
+                <label key={m.key} className="inline" style={{ fontSize: 14 }}>
+                  <input
+                    type="checkbox"
+                    checked={homePaymentMethods.includes(m.key)}
+                    onChange={(e) => {
+                      setHomePaymentMethods((prev) => {
+                        if (e.target.checked) return Array.from(new Set([...prev, m.key]));
+                        return prev.filter((x) => x !== m.key);
+                      });
+                    }}
+                  />
+                  {m.label}
+                </label>
+              ))}
+            </div>
 
             <div className="field-help" style={{ marginTop: 6 }}>
               <div className="section-title">Credenciais do motoboy</div>
@@ -268,6 +384,9 @@ export default function TenantSettings() {
       ) : (
         <Card>
           <div className="section-title">Horarios de funcionamento</div>
+          <div className="muted" style={{ marginTop: 6 }}>
+            Estes horarios aparecem na home do cardapio digital.
+          </div>
           <div className="grid" style={{ marginTop: 10 }}>
             {DAYS.map((d) => {
               const row = hoursMap[d.key] || { day: d.key, open: "18:00", close: "23:00", closed: false };

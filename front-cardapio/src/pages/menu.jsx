@@ -97,7 +97,9 @@ export default function Menu() {
             &#8249;
           </button>
           <div className="m-title-wrap">
-            {tenant?.logoUrl ? <img className="m-tenant-logo" src={tenant.logoUrl} alt={`Logo ${tenant?.name || ""}`} /> : null}
+            {tenant?.branding?.restaurantIconUrl || tenant?.logoUrl ? (
+              <img className="m-tenant-logo" src={tenant?.branding?.restaurantIconUrl || tenant?.logoUrl} alt={`Logo ${tenant?.name || ""}`} />
+            ) : null}
             <div className="m-title">{tenant?.name || slug}</div>
           </div>
           <button className="m-icon-btn" onClick={() => nav(`/t/${slug}/cart`)} aria-label="Carrinho">

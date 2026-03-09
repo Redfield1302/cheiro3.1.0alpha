@@ -32,6 +32,8 @@ App: `front-pdr-erp`
   - som e auto-impressao opcionais para novos pedidos.
 - Configuracao do estabelecimento com:
   - logo (URL ou arquivo local)
+  - imagem de capa do cardapio digital (URL ou arquivo local)
+  - icone do restaurante para cardapio digital (URL ou arquivo local)
   - chave PIX
   - taxa de entrega
   - taxa de cartao

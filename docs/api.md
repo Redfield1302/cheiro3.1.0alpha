@@ -22,8 +22,12 @@ Base URL (dev): `http://localhost:3000`
     - `pixKey`
     - `deliveryFee`
     - `cardFeePercent`
+  - inclui `homeSettings`:
+    - `deliveryEta`
+    - `minimumOrder`
+    - `paymentMethods`
 - `PATCH /api/tenant/me`
-  - atualiza dados do tenant, horarios e checkout settings.
+  - atualiza dados do tenant, horarios, checkout settings e home settings do cardapio digital.
 
 ## Cardapio (publico)
 
