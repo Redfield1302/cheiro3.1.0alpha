@@ -69,13 +69,13 @@ export default function Home() {
             </div>
             <div>
               <h1 className="m-home-figma-title">{tenant?.name || "Cardapio Digital"}</h1>
-              <p className="m-home-figma-subtitle">sabores e sensacoes</p>
+             { /*<!--<p className="m-home-figma-subtitle">sabores e sensacoes</p>-->*/ }
             </div>
           </div>
 
           <div className="m-home-figma-meta">
             <div className="m-home-figma-meta-item">◷ {deliveryEta}</div>
-            <div className="m-home-figma-meta-item">$ {money(minimumOrder).replace("R$", "").trim()} min</div>
+            <div className="m-home-figma-meta-item">R$ {money(minimumOrder).replace("R$", "").trim()} pedido minimo</div>
           </div>
 
           <div className="m-home-figma-block">

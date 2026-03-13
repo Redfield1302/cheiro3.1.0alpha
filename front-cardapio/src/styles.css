@@ -179,9 +179,9 @@ body,
 .m-home-figma-head {
   display: grid;
   grid-template-columns: 62px 1fr;
-  gap: 8px;
+  gap: 24px;
   align-items: center;
-  margin: -30px 10px 8px;
+  margin: 5px 10px 8px;
 }
 
 .m-home-figma-icon-wrap {
@@ -204,6 +204,7 @@ body,
 
 .m-home-figma-title {
   margin: 0;
+  margin-top: 10px;
   font-size: clamp(24px, 6vw, 32px);
   line-height: 1;
   color: #121212;
@@ -211,7 +212,7 @@ body,
 
 .m-home-figma-subtitle {
   margin: 2px 0 0;
-  font-size: clamp(18px, 4.8vw, 26px);
+  font-size: clamp(18px, 4.8vw, 16px);
   color: #121212;
 }
 
@@ -279,6 +280,9 @@ body,
   min-height: 48px;
 }
 
+.m-field-help.green {
+  color: green;/
+}
 @media (max-width: 380px) {
   .m-home-figma-head {
     grid-template-columns: 52px 1fr;
@@ -381,8 +385,8 @@ body,
 }
 
 .m-body {
-  padding: 12px;
-  padding-bottom: 92px;
+  padding: 16px;
+  padding-bottom: 100px;
 }
 
 .m-home-body {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { createOrder, getTenant } from "../lib/api";
 import { normalizeAddressForPayload, normalizePhoneForPayload } from "../lib/contact";
+import { CopyText } from "../components/CopyText";
 
 const money = (n) =>
   Number(n || 0).toLocaleString("pt-BR", {
@@ -150,8 +151,9 @@ export default function Cart() {
             ))}
           </div>
           {paymentMethod === "PIX" && tenantCheckout.pixKey ? (
-            <div className="m-field-help">Chave PIX: <strong>{tenantCheckout.pixKey}</strong></div>
+            <div className="m-field-help">Chave PIX: <CopyText text={tenantCheckout.pixKey} /></div>
           ) : null}
+          <div className="m-field-help green">Após copiar a chave pix, enviar comprovante para confirmação do pagamento, para o whatsapp da empresa</div>
         </section>
 
         <section className="m-surface">
