@@ -4,6 +4,7 @@ const { auth } = require("../middlewares/auth");
 const { transitionOrderState } = require("../../core/orderStateMachine");
 const { addItemToOrder, recalcOrderTotals } = require("../../core/orderBuilder");
 const { normalizePhoneForStorage, normalizeAddressForStorage } = require("../../core/contactUtils");
+const { notifyCustomerOrderStatus } = require("../../lib/whatsapp/botService");
 
 const router = express.Router();
 const { prisma } = require("../../lib/prisma");
@@ -212,6 +213,11 @@ router.post("/checkout", auth, async (req, res) => {
     }, { timeout: 20000, maxWait: 10000 });
 
     if (result.error) return res.status(result.status).json({ error: result.error });
+
+    notifyCustomerOrderStatus({ orderId: result.updated.id }).catch((err) => {
+      console.error("pdv_checkout_whatsapp_notify_error", err?.message || err);
+    });
+
     return res.json(result.updated);
   } catch (e) {
     console.error("checkout_error", e);
@@ -220,5 +226,4 @@ router.post("/checkout", auth, async (req, res) => {
 });
 
 module.exports = router;
-
 

@@ -7,6 +7,7 @@ import { EmptyState } from "../components/ui/EmptyState.jsx";
 import { listKitchenOrders, updateKitchenOrderStatus } from "../lib/api";
 import { useToast } from "../components/ui/Toast.jsx";
 import { buildGoogleMapsSearchLink, buildWhatsAppLink, montarEnderecoParaMapa } from "../lib/contact.js";
+import notificacaoSound from "../assets/notificacao.wav";
 
 const money = (n) => Number(n || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -40,16 +41,11 @@ export default function Kitchen() {
   function playNotificationSound() {
     if (!soundEnabled) return;
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = 880;
-      gain.gain.value = 0.04;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.12);
+      const audio = new Audio(notificacaoSound);
+      audio.currentTime = 0;
+      void audio.play().catch(() => {
+        // Nao quebra fluxo se o navegador bloquear audio automatico.
+      });
     } catch (_e) {
       // Nao quebra fluxo se o navegador bloquear audio automatico.
     }

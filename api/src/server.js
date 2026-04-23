@@ -16,6 +16,7 @@ const ordersRoutes = require("./http/routes/ordersRoutes");
 const conversationsRoutes = require("./http/routes/conversationsRoutes");
 const kitchenRoutes = require("./http/routes/kitchenRoutes");
 const deliveryRoutes = require("./http/routes/deliveryRoutes");
+const whatsappRoutes = require("./http/routes/whatsappRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,7 @@ app.use("/api/orders", ordersRoutes);
 app.use("/api/conversations", conversationsRoutes);
 app.use("/api/kitchen", kitchenRoutes);
 app.use("/api/delivery", deliveryRoutes);
+app.use("/api/whatsapp", whatsappRoutes);
 
 app.use((err, req, res, next) => {
   if (err?.type === "entity.too.large") {

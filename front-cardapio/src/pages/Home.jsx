@@ -74,7 +74,7 @@ export default function Home() {
           </div>
 
           <div className="m-home-figma-meta">
-            <div className="m-home-figma-meta-item">◷ {deliveryEta}</div>
+            <div className="m-home-figma-meta-item">â—· {deliveryEta}</div>
             <div className="m-home-figma-meta-item">R$ {money(minimumOrder).replace("R$", "").trim()} pedido minimo</div>
           </div>
 

@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard.jsx";
 import Kitchen from "./pages/Kitchen.jsx";
 import Conversations from "./pages/Conversations.jsx";
 import TenantSettings from "./pages/TenantSettings.jsx";
+import WhatsappSettings from "./pages/WhatsappSettings.jsx";
 import NoPermission from "./pages/NoPermission.jsx";
 import Layout from "./components/Layout.jsx";
 import { ToastProvider } from "./components/ui/Toast.jsx";
@@ -61,6 +62,7 @@ export default function App() {
             <Route path="/kitchen" element={<RoleGuard roles={["ADMIN","MANAGER","CASHIER","ATTENDANT"]}><Kitchen /></RoleGuard>} />
             <Route path="/conversations" element={<RoleGuard roles={["ADMIN","MANAGER","ATTENDANT"]}><Conversations /></RoleGuard>} />
             <Route path="/settings/tenant" element={<RoleGuard roles={["ADMIN","MANAGER"]}><TenantSettings /></RoleGuard>} />
+            <Route path="/settings/whatsapp" element={<RoleGuard roles={["ADMIN","MANAGER"]}><WhatsappSettings /></RoleGuard>} />
           </Route>
           <Route path="*" element={<Navigate to="/pdv" replace />} />
         </Routes>

@@ -10,7 +10,8 @@ const titles = {
   "/inventory": { title: "Estoque", subtitle: "Insumos e movimentacoes" },
   "/products": { title: "Produtos", subtitle: "Catalogo interno" },
   "/kitchen": { title: "Cozinha", subtitle: "Acompanhe e atualize o preparo por tenant" },
-  "/conversations": { title: "Atendimento", subtitle: "Inbox e mensagens" }
+  "/conversations": { title: "Atendimento", subtitle: "Inbox e mensagens" },
+  "/settings/whatsapp": { title: "WhatsApp", subtitle: "Conexao por QR, bot e notificacoes de clientes" }
 };
 
 export default function Layout() {

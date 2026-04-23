@@ -2,6 +2,7 @@
 const { OrderStatus } = require("@prisma/client");
 const { auth } = require("../middlewares/auth");
 const { transitionOrderState } = require("../../core/orderStateMachine");
+const { notifyCustomerOrderStatus } = require("../../lib/whatsapp/botService");
 
 const router = express.Router();
 const { prisma } = require("../../lib/prisma");
@@ -75,6 +76,11 @@ router.patch("/orders/:id/status", auth, async (req, res) => {
         reason: reason || "kitchen_update"
       })
     );
+
+    notifyCustomerOrderStatus({ orderId: updated.id }).catch((err) => {
+      console.error("kitchen_whatsapp_notify_error", err?.message || err);
+    });
+
     return res.json(updated);
   } catch (e) {
     console.error("kitchen_status_error", e);

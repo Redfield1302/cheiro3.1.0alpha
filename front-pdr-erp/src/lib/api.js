@@ -124,3 +124,12 @@ export const createDeliveryAgent = (body) =>
   req("/api/delivery/agents", { method: "POST", body: JSON.stringify(body) });
 export const updateDeliveryAgent = (id, body) =>
   req(`/api/delivery/agents/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+
+export const getWhatsappSession = () => req("/api/whatsapp/session");
+export const getWhatsappQr = () => req("/api/whatsapp/session/qr");
+export const saveWhatsappSessionConfig = (body) =>
+  req("/api/whatsapp/session/config", { method: "POST", body: JSON.stringify(body) });
+export const connectWhatsappSession = () => req("/api/whatsapp/session/connect", { method: "POST" });
+export const disconnectWhatsappSession = () => req("/api/whatsapp/session/disconnect", { method: "POST" });
+export const sendWhatsappTest = (body) =>
+  req("/api/whatsapp/notify/test", { method: "POST", body: JSON.stringify(body) });

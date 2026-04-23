@@ -1,40 +1,47 @@
 import { NavLink } from "react-router-dom";
 
 const items = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/pdv", label: "PDV" },
-  { to: "/cash", label: "Caixa" },
-  { to: "/inventory", label: "Estoque" },
-  { to: "/products", label: "Produtos" },
-  { to: "/categories", label: "Categorias" },
-  { to: "/orders", label: "Pedidos" },
-  { to: "/kitchen", label: "Cozinha" },
-  { to: "/conversations", label: "Atendimento" }
+  { to: "/dashboard", label: "Dashboard", icon: "📊" },
+  { to: "/pdv", label: "PDV", icon: "🧾" },
+  { to: "/cash", label: "Caixa", icon: "💰" },
+  { to: "/inventory", label: "Estoque", icon: "📦" },
+  { to: "/products", label: "Produtos", icon: "🛒" },
+  { to: "/categories", label: "Categorias", icon: "📂" },
+  { to: "/orders", label: "Pedidos", icon: "📋" },
+  { to: "/kitchen", label: "Cozinha", icon: "👨‍🍳" },
+  { to: "/conversations", label: "Atendimento", icon: "💬" }
 ];
 
 export default function Sidebar({ isOpen = false, onClose = () => {} }) {
   return (
     <>
     <aside className={`sidebar ${isOpen ? "open" : ""}`}>
-      <div className="brand">
-        <div className="brand-badge">CG</div>
-        <div>
-          <div>Cheio Gestor</div>
-          <div className="muted" style={{ fontSize: 12 }}>v4.0.0</div>
-        </div>
+      <div className="brand brand-compact">
+        <div className="brand-mini-text">Cheiro Gestor</div>
       </div>
 
-      <div className="section-title">Operacao</div>
-      <nav className="nav" style={{ marginTop: 8 }}>
+      <nav className="nav nav-compact" style={{ marginTop: 8 }}>
         {items.map((it) => (
-          <NavLink key={it.to} to={it.to} onClick={onClose} className={({ isActive }) => (isActive ? "active" : "")}> {it.label} </NavLink>
+          <NavLink key={it.to} to={it.to} onClick={onClose} className={({ isActive }) => (isActive ? "active pdv-rail-link" : "pdv-rail-link")}>
+            <span className="pdv-rail-icon" aria-hidden="true">{it.icon}</span>
+            <span className="pdv-rail-label">{it.label}</span>
+          </NavLink>
         ))}
       </nav>
 
-      <div style={{ marginTop: 24 }} className="section-title">Sistema</div>
-      <div className="list" style={{ marginTop: 8 }}>
-        <NavLink className={({ isActive }) => (isActive ? "badge" : "badge")} to="/settings/tenant" onClick={onClose}>Dados do estabelecimento</NavLink>
-        <a className="badge" href="/t/minhapizzaria" target="_blank" rel="noreferrer">Cardapio digital</a>
+      <div className="sidebar-bottom-actions">
+        <NavLink className={({ isActive }) => (isActive ? "pdv-rail-link active" : "pdv-rail-link")} to="/settings/whatsapp" onClick={onClose}>
+          <span className="pdv-rail-icon rail-whatsapp-icon" aria-hidden="true">WA</span>
+          <span className="pdv-rail-label">WhatsApp</span>
+        </NavLink>
+        <NavLink className={({ isActive }) => (isActive ? "pdv-rail-link active" : "pdv-rail-link")} to="/settings/tenant" onClick={onClose}>
+          <span className="pdv-rail-icon" aria-hidden="true">::</span>
+          <span className="pdv-rail-label">Estabelecimento</span>
+        </NavLink>
+        <a className="pdv-rail-link" href="/t/minhapizzaria" target="_blank" rel="noreferrer">
+          <span className="pdv-rail-icon" aria-hidden="true">-></span>
+          <span className="pdv-rail-label">Cardapio</span>
+        </a>
       </div>
     </aside>
     {isOpen ? <button className="mobile-overlay" onClick={onClose} aria-label="Fechar menu" /> : null}

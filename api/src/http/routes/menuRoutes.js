@@ -3,6 +3,7 @@ const { PaymentStatus, PaymentMethod, OrderStatus } = require("@prisma/client");
 const { transitionOrderState } = require("../../core/orderStateMachine");
 const { addItemToOrder, recalcOrderTotals } = require("../../core/orderBuilder");
 const { normalizePhoneForStorage, normalizeAddressForStorage } = require("../../core/contactUtils");
+const { notifyCustomerOrderStatus } = require("../../lib/whatsapp/botService");
 
 const router = express.Router();
 const { prisma } = require("../../lib/prisma");
@@ -239,6 +240,10 @@ router.post("/:slug/orders", async (req, res) => {
 
       return { order: confirmed, payment };
     }, { timeout: 30000, maxWait: 10000 });
+
+    notifyCustomerOrderStatus({ orderId: created.order.id }).catch((err) => {
+      console.error("menu_checkout_whatsapp_notify_error", err?.message || err);
+    });
 
     return res.status(201).json(created);
   } catch (e) {

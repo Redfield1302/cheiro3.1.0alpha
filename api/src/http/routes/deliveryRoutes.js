@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { OrderStatus } = require("@prisma/client");
 const { auth, authDelivery } = require("../middlewares/auth");
 const { transitionOrderState } = require("../../core/orderStateMachine");
+const { notifyCustomerOrderStatus } = require("../../lib/whatsapp/botService");
 
 const router = express.Router();
 const { prisma } = require("../../lib/prisma");
@@ -140,6 +141,10 @@ router.patch("/orders/:id/claim", authDelivery, async (req, res) => {
       });
     });
 
+    notifyCustomerOrderStatus({ orderId: updated.id }).catch((err) => {
+      console.error("delivery_claim_whatsapp_notify_error", err?.message || err);
+    });
+
     return res.json(updated);
   } catch (e) {
     console.error("delivery_claim_error", e);
@@ -178,6 +183,10 @@ router.patch("/orders/:id/status", authDelivery, async (req, res) => {
         actorUserId: deliveryPersonId,
         reason: "delivery_status_update"
       });
+    });
+
+    notifyCustomerOrderStatus({ orderId: updated.id }).catch((err) => {
+      console.error("delivery_status_whatsapp_notify_error", err?.message || err);
     });
 
     return res.json(updated);
